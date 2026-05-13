@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# Game of Life - Phase 1 Skeleton
-# POSIX-compatible bash behavior
+# Game of Life
 
 set -u
 
@@ -55,7 +54,6 @@ init_terminal() {
 get_term_size() {
     ROWS=$(tput lines)
     COLS=$(tput cols)
-    # Reserve lines for header and stats
     ROWS=$((ROWS - 5))
     (( ROWS < 5 )) && ROWS=5
     (( COLS < 5 )) && COLS=5
@@ -63,6 +61,7 @@ get_term_size() {
 
 make_empty_grid() {
     local total=$((ROWS * COLS))
+    # Iteration: Initialize flat arrays using a single loop
     for ((i=0; i<total; i++)); do
         grid_0[i]=0
         grid_1[i]=0
@@ -75,7 +74,6 @@ set_cell() {
     local c=$2
     local val=$3
     
-    # Bounds check (still useful for seeding)
     if [[ $r -lt 0 || $r -ge ROWS || $c -lt 0 || $c -ge COLS ]]; then
         return
     fi
@@ -93,6 +91,7 @@ count_live_cells() {
     LIVE_CELLS=0
     local val
     local -n curr="grid_$CURR_IDX"
+    # Iteration: Traverse the entire grid array to sum live cells
     for val in "${curr[@]}"; do
         (( LIVE_CELLS += val ))
     done
@@ -106,6 +105,7 @@ compute_next_grid() {
     local -n next="grid_$next_idx"
     
     LIVE_CELLS=0
+    # Iteration: Nested loops to process every row and column of the grid
     for ((r=0; r<ROWS; r++)); do
         ru=${UP[r]}
         rd=${DOWN[r]}
@@ -117,6 +117,7 @@ compute_next_grid() {
             cl=${LEFT[c]}
             cr=${RIGHT[c]}
             
+            # Iteration: Arithmetic summation of 8 neighboring cells
             (( neighbors = 
                 curr[ru_cols + cl] + curr[ru_cols + c] + curr[ru_cols + cr] +
                 curr[r_cols + cl] +                     curr[r_cols + cr] +
@@ -145,7 +146,7 @@ update_grid() {
 
 init_grid() {
     make_empty_grid
-    # Precompute neighbors and colors
+    # Iteration: Precompute coordinate mappings for toroidal wrapping
     for ((r=0; r<ROWS; r++)); do
         UP[r]=$(((r - 1 + ROWS) % ROWS))
         DOWN[r]=$(((r + 1) % ROWS))
@@ -155,12 +156,11 @@ init_grid() {
         RIGHT[c]=$(((c + 1) % COLS))
     done
     
-    # Precompute 24-bit Truecolor gradient
     local r c idx
+    # Iteration: Nested loops to generate a 24-bit Truecolor gradient map
     for ((r=0; r<ROWS; r++)); do
         for ((c=0; c<COLS; c++)); do
             idx=$((r * COLS + c))
-            # Gradient from Cyan (0,255,255) to Magenta (255,0,255)
             local red=$(( r * 255 / ROWS ))
             local green=$(( 255 - (c * 255 / COLS) ))
             local blue=255
@@ -168,23 +168,6 @@ init_grid() {
         done
     done
 }
-
-# seed_grid() {
-#     local mid_r=$((ROWS / 2))
-#     local mid_c=$((COLS / 2))
-    
-#     # Glider
-#     # .O.
-#     # ..O
-#     # OOO
-#     set_cell $((mid_r - 1)) "$mid_c" "$ALIVE"
-#     set_cell "$mid_r" $((mid_c + 1)) "$ALIVE"
-#     set_cell $((mid_r + 1)) $((mid_c - 1)) "$ALIVE"
-#     set_cell $((mid_r + 1)) "$mid_c" "$ALIVE"
-#     set_cell $((mid_r + 1)) $((mid_c + 1)) "$ALIVE"
-    
-#     count_live_cells
-# }
 
 seed_grid() {
     local r=$((ROWS / 2))
@@ -208,11 +191,6 @@ seed_grid() {
     count_live_cells
 }
 
-# Colors (Removed for performance)
-
-render() {
-    local buf=$'\033[H'
-    local -n curr="grid_$CURR_IDX"
     local r c idx val
     local RESET=$'\033[0m'
     local BOLD=$'\033[1m'
@@ -220,7 +198,6 @@ render() {
     local YELLOW=$'\033[38;2;255;255;0m'
     local GREEN=$'\033[38;2;0;255;0m'
 
-    # Update Header
     buf+="${BOLD}${CYAN}--- CONWAY'S GAME OF LIFE ---${RESET}"$'\n'
     
     local mode="RUNNING"
@@ -236,12 +213,12 @@ render() {
         "$GENERATION" "$LIVE_CELLS" "$density" "$COLS" "$ROWS" "$mode" "$DELAY"
     buf+="$stat_line"
 
+    # Iteration: Nested loops to identify and render only changed cells (diff rendering)
     for ((r=0; r<ROWS; r++)); do
         for ((c=0; c<COLS; c++)); do
             idx=$((r * COLS + c))
             val=${curr[idx]}
             if (( val != rendered_grid[idx] )); then
-                # Move cursor to r+3 (title+stats), c+1
                 if (( val )); then
                     buf+=$'\033['"$((r+3))"';'"$((c+1))"'H'"${COLOR_GRID[idx]}${ALIVE}${RESET}"
                 else
@@ -252,7 +229,6 @@ render() {
         done
     done
     
-    # Move cursor to the bottom for controls line
     buf+=$'\033['"$((ROWS+3))"';1H'"${BOLD}${YELLOW}"'Controls: [q]uit [p]ause [s]tep [+/-] speed'"${RESET}"'\n'
     
     printf "%s" "$buf"
@@ -264,9 +240,9 @@ main() {
     init_grid
     seed_grid
     
+    # Iteration: Main execution loop that persists until the user quits
     while "$RUNNING"; do
         key=""
-        # Render every RENDER_FREQ generations if running, or every time if paused/stepping
         if [[ "$PAUSED" == "true" || "$STEP_REQUESTED" == "true" || $(( GENERATION % RENDER_FREQ )) -eq 0 ]]; then
             render
         fi
@@ -302,7 +278,6 @@ main() {
     done
 }
 
-# Only run if not sourced
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main
 fi
