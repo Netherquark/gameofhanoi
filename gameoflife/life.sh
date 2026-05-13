@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034,SC2178
 
 # Game of Life
 
@@ -190,7 +191,9 @@ seed_grid() {
 
     count_live_cells
 }
-
+render() {
+    local buf=$'\033[H'
+    local -n curr="grid_$CURR_IDX"
     local r c idx val
     local RESET=$'\033[0m'
     local BOLD=$'\033[1m'
