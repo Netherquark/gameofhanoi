@@ -1,5 +1,18 @@
 # Bash Algorithms: Tower of Hanoi & Game of Life
 
+<table>
+<tr>
+<td align="center">
+<b>Tower of Hanoi</b><br><br>
+<img src="towerofhanoi/demo.gif" width="480">
+</td>
+
+<td align="center">
+<b>Conway's Game of Life</b><br><br>
+<img src="gameoflife/demo.gif" width="480">
+</td>
+</tr>
+</table>
 
 This repository contains two terminal applications written in pure Bash: a **Tower of Hanoi** solver and **Conway's Game of Life**.
 
